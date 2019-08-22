@@ -5,6 +5,10 @@ import spark.Request;
 import spark.Response;
 import static spark.Spark.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import javax.management.Query;
 
 /**
@@ -23,31 +27,6 @@ public class SparkApp {
         port(getPort());
         get("/inputdata", (req, res) -> inputDataPage(req, res));
         get("/results", (req, res) -> resultsPage(req, res));
-
-        post("/mean", (req, res) -> {
-            QueryParamsMap qmp = req.queryMap();
-            String[] values = qmp.get("values").value().split(" ");
-            LinkedList lK = new LinkedList();
-            for(String val : values){
-                lK.append(Double.parseDouble(val));
-            }
-            return App.mean(lK);
-        });
-
-        post("/devStandard", (req, res) -> {
-            QueryParamsMap qmp = req.queryMap();
-            String[] values = qmp.get("values").value().split(" ");
-            LinkedList lK = new LinkedList();
-            for(String val : values){
-                lK.append(Double.parseDouble(val));
-            }
-            return App.standardDev(lK);
-        });
-    }
-
-    private static String resultsPage(Request req, Response res) {
-        return req.queryParams("firstname") + " " +
-                req.queryParams("lastname");
     }
 
     private static String inputDataPage(Request req, Response res) {
@@ -58,19 +37,24 @@ public class SparkApp {
                 + "<h1>Here you'd can calculate mean and standard deviation upon a group of numbers</h2>"
                 + "<form action=\"/results\">"
                 + "  Please instert your numbers with a space between them:<br>"
-                + "  <input type=\"text\" name=\"firstname\" value=\"Mickey\">"
-                + "  <br>"
-                + "  Last name:<br>"
-                + "  <input type=\"text\" name=\"lastname\" value=\"Mouse\">"
+                + "  <input type=\"text\" name=\"Numbers\" value=\"\">"
                 + "  <br><br>"
-                + "  <input type=\"submit\" value=\"Submit\">"
+                + "  <input type=\"submit\" value=\"Calculate\">"
                 + "</form>"
-                + "<p>If you click the \"Submit\" button, the form-data will be sent to a page called \"/results\".</p>"
                 + "</body>"
                 + "</html>";
         return pageContent;
     }
 
+    private static String resultsPage(Request req, Response res) {
+        String values = req.queryParams("Numbers");
+        List<String> lS = new ArrayList<String>(Arrays.asList(values.split(",")));
+        LinkedList lK = new LinkedList();
+        for (int i = 0; i < lS.size(); i++) {
+            lK.append(Double.parseDouble(lS.get(i)));
+        }
+        return "The median of your group numbers is: " + App.mean(lK) + "and the standard deviation is: " + App.standardDev(lK);
+    }
 
     /**
      * This method reads the default port as specified by the PORT variable in
